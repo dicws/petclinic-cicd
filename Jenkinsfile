@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         REGION = "ca-central-1"
-        ECR_NAME = "petclinic"
+        ECR_NAME = "user21-webserver"
         ACCOUNT_ID = "450444046629"
         IMAGE_TAG = "v2"
         ECR_REPO = "${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${ECR_NAME}"
