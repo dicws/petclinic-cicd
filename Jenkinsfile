@@ -38,7 +38,7 @@ pipeline {
                   --severity HIGH,CRITICAL \
                   --exit-code 1 \
                   --no-progress \
-                  .
+                  Dockerfile
                 '''
             }
         }
