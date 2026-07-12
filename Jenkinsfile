@@ -69,7 +69,7 @@ pipeline {
                   --scanners vuln,secret,misconfig \
                   --severity HIGH,CRITICAL \
                   --exit-code 1 \
-                  --no-progress 
+                  --no-progress  \
                   Dockerfile
                 '''
             }
