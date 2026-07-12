@@ -68,25 +68,24 @@ pipeline {
 
         stage('ECR Push') {
             steps {
-                // 플러그인 특화 메서드 대신 젠킨스 기본 내장 기능을 사용합니다.
-                withCredentials([usernamePassword(
+                // 'AWS Credentials' 유형에 맞게 내장 함수를 'aws'로 변경합니다.
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding', 
                     credentialsId: 'aws-ecr-key', 
-                    usernameVariable: 'AWS_ACCESS_KEY_ID', 
-                    passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-                )]) {
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
                     sh '''
-                    # 1. 도커 내부의 AWS 인증 헬퍼용 환경 변수를 일시적으로 선언합니다.
+                    # 환경 변수로 AWS 자격증명 임시 주입
                     export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                     export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
                     export AWS_DEFAULT_REGION=${REGION}
                     
-                    # 2. AWS CLI(aws) 명령어 없이, 도커 표준 인증 바인딩 메커니즘을 이용해 푸시를 시도합니다.
-                    # 젠킨스 도커 환경에 기본 내장된 amazon-ecr-credential-helper가 작동하거나, 
-                    # 주입된 인증 정보를 기반으로 ECR 저장소 인증이 즉시 완료됩니다.
+                    # AWS CLI 없이 즉시 ECR로 푸시
                     docker push ${ECR_REPO}:${IMAGE_TAG}
                     '''
                 }
             }
-        }   
+        } 
     }
 }
