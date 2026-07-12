@@ -90,7 +90,7 @@ pipeline {
                   --severity HIGH,CRITICAL \
                   --exit-code 1 \
                   --no-progress \
-                  DockerFile    # 💡 마침표(.) 대신 메인 Dockerfile만 지정합니다.
+                  Dockerfile    # 💡 마침표(.) 대신 메인 Dockerfile만 지정합니다.
                 '''
             }
         }
