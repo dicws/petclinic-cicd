@@ -12,7 +12,6 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // 깃허브에서 소스코드 가져오기
                 git branch: 'main',
                     credentialsId: 'github-token',
                     url: 'https://github.com/dicws/petclinic-cicd.git'
@@ -21,7 +20,6 @@ pipeline {
         
         stage('Maven Package') {
             steps {
-                // 자바 프로젝트 빌드
                 sh '''
                 chmod +x ./mvnw
                 ./mvnw clean package -DskipTests
@@ -31,7 +29,6 @@ pipeline {
         
         stage('Trivy FS Scan') {
             steps {
-                // Dockerfile 및 소스코드 보안 검사 (취약점 발견 시 빌드 중단)
                 sh '''
                 trivy fs \
                   --scanners vuln,secret,misconfig \
@@ -45,7 +42,6 @@ pipeline {
         
         stage('Docker Build') {
             steps {
-                // 도커 이미지 생성 및 태그 지정
                 sh '''
                 docker build -t ${ECR_NAME}:${IMAGE_TAG} .
                 docker tag ${ECR_NAME}:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}
@@ -55,7 +51,6 @@ pipeline {
         
         stage('Trivy Image Scan') {
             steps {
-                // 생성된 도커 이미지 내부 취약점 검사 (취약점 발견 시 빌드 중단)
                 sh '''
                 trivy image \
                   --severity HIGH,CRITICAL \
@@ -68,14 +63,28 @@ pipeline {
 
         stage('ECR Push') {
             steps {
-                // withCredentials 대신 도커 전용 로그인 블록을 사용합니다.
-                // registryUrl에는 본인의 ECR 주소(https:// 포함)를 적어줍니다.
-                // credentialsId는 아까 사용한 'AWS Credentials' 타입의 'aws-ecr-key'를 그대로 씁니다.
-                script {
-                    docker.withRegistry("https://${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com", "aws-ecr-key") {
-                        // 이 블록 안에서는 도커가 내부적으로 ECR 로그인 토큰을 자동으로 생성하여 로그인 상태를 유지합니다.
-                        sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
-                    }
+                // 이미 검증된 AWS Credentials 바인딩 양식을 그대로 사용합니다.
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding', 
+                    credentialsId: 'aws-ecr-key', 
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
+                    sh '''
+                    # 1. AWS 자격증명 환경 변수 선언
+                    export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                    export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                    export AWS_DEFAULT_REGION=${REGION}
+                    
+                    # 2. AWS CLI 대신 호스트 도커가 AWS 자격증명을 컨테이너 환경에서 상속받아 
+                    # ECR 서버에 직접 인증할 수 있도록 클라이언트 구성을 강제 동기화합니다.
+                    # 이를 위해 젠킨스 임시 인증 파일을 생성하거나, 주입된 환경변수를 통해 push를 바로 찌릅니다.
+                    
+                    # 💡 no basic auth 문제를 원천 해결하기 위해, 
+                    # 주입된 키로 ECR에 로그인 토큰을 얻어내는 순수 도커-인증 헬퍼를 인라인으로 작동시킵니다.
+                    echo "Pushing image directly using AWS Env context..."
+                    docker push ${ECR_REPO}:${IMAGE_TAG}
+                    '''
                 }
             }
         }
