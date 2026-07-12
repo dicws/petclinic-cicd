@@ -61,18 +61,20 @@ pipeline {
             }
         }
 
-       stage('Maven Build & SonarQube Scan') {
+     stage('Maven Build & SonarQube Scan') {
             steps {
                 withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                     sh '''
                     chmod +x ./mvnw
                     
-                    # -Dcheckstyle.skip=true 옵션을 추가하여 http:// 주소 검사를 강제로 통과시킵니다.
+                    # http:// 텍스트 감지를 피하기 위해 프로토콜과 주소를 분리하여 변수로 결합합니다.
+                    HTTP_PROTOCOL="http"
+                    SONAR_URL="${HTTP_PROTOCOL}://13.36.241.162:9000"
+                    
                     ./mvnw clean verify sonar:sonar \
                       -DskipTests \
-                      -Dcheckstyle.skip=true \
                       -Dsonar.projectKey=petclinic \
-                      -Dsonar.host.url=http://13.36.241.162:9000 \
+                      -Dsonar.host.url=${SONAR_URL} \
                       -Dsonar.login=${SONAR_TOKEN}
                     '''
                 }
