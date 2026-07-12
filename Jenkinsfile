@@ -66,16 +66,16 @@ pipeline {
             }
         }
 
-      stage('ECR Push') {
+     stage('ECR Push') {
             steps {
-                // aws 명령어 대신 확인된 실제 절대 경로(/usr/local/aws-cli/v2/current/bin/aws)를 직접 입력합니다.
-                sh '''
-                /usr/local/aws-cli/v2/current/bin/aws ecr get-login-password --region ${REGION} | \
-                docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
+                // AWS CLI 없이 젠킨스 플러그인으로 ECR에 안전하게 로그인
+                ecrLogin(awsCredentialsId: 'aws-ecr-key', region: "${REGION}")
                 
+                // 로그인이 완료된 상태이므로 push만 수행하면 됩니다.
+                sh '''
                 docker push ${ECR_REPO}:${IMAGE_TAG}
                 '''
             }
-        }        
+        }      
     }
 }
