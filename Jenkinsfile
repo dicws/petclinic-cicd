@@ -91,7 +91,7 @@ pipeline {
                   --severity HIGH,CRITICAL \
                   --exit-code 1 \
                   --no-progress \
-                  .
+                  ${ECR_NAME}:${IMAGE_TAG}
                 '''
             }
         }
