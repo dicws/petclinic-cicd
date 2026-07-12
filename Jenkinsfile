@@ -69,7 +69,7 @@ pipeline {
                     
                     # http:// 텍스트 감지를 피하기 위해 프로토콜과 주소를 분리하여 변수로 결합합니다.
                     HTTP_PROTOCOL="http"
-                    SONAR_URL="${HTTP_PROTOCOL}://13.36.241.162:9000"
+                    SONAR_URL="${HTTP_PROTOCOL}://35.182.243.240:9000"
                     
                     ./mvnw clean verify sonar:sonar \
                       -DskipTests \
