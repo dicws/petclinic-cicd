@@ -65,16 +65,17 @@ pipeline {
                 '''
             }
         }
-        
-        stage('ECR Push') {
+
+      stage('ECR Push') {
             steps {
-                // AWS ECR 로그인 후 이미지 업로드
+                // aws 명령어 대신 확인된 실제 절대 경로(/usr/local/aws-cli/v2/current/bin/aws)를 직접 입력합니다.
                 sh '''
-                aws ecr get-login-password --region ${REGION} | \
+                /usr/local/aws-cli/v2/current/bin/aws ecr get-login-password --region ${REGION} | \
                 docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
+                
                 docker push ${ECR_REPO}:${IMAGE_TAG}
                 '''
             }
-        }
+        }        
     }
 }
