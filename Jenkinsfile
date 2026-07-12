@@ -66,16 +66,17 @@ pipeline {
             }
         }
 
-     stage('ECR Push') {
+        stage('ECR Push') {
             steps {
-                // AWS CLI 없이 젠킨스 플러그인으로 ECR에 안전하게 로그인
-                ecrLogin(awsCredentialsId: 'aws-ecr-key', region: "${REGION}")
-                
-                // 로그인이 완료된 상태이므로 push만 수행하면 됩니다.
-                sh '''
-                docker push ${ECR_REPO}:${IMAGE_TAG}
-                '''
+                // script 블록으로 감싸주어야 젠킨스가 플러그인의 'ecrLogin' 메소드를 올바르게 인식합니다.
+                script {
+                    // awsCredentialsId에는 Jenkins Credentials에 등록하신 AWS ID를 적어주세요.
+                    ecrLogin(awsCredentialsId: 'aws-ecr-key', region: "${REGION}")
+                    
+                    // 로그인이 완료되었으므로 AWS CLI 없이 푸시만 진행합니다.
+                    sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
+                }
             }
-        }      
+        }     
     }
 }
