@@ -68,24 +68,16 @@ pipeline {
 
         stage('ECR Push') {
             steps {
-                // 'AWS Credentials' 유형에 맞게 내장 함수를 'aws'로 변경합니다.
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding', 
-                    credentialsId: 'aws-ecr-key', 
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                ]]) {
-                    sh '''
-                    # 환경 변수로 AWS 자격증명 임시 주입
-                    export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                    export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                    export AWS_DEFAULT_REGION=${REGION}
-                    
-                    # AWS CLI 없이 즉시 ECR로 푸시
-                    docker push ${ECR_REPO}:${IMAGE_TAG}
-                    '''
+                // withCredentials 대신 도커 전용 로그인 블록을 사용합니다.
+                // registryUrl에는 본인의 ECR 주소(https:// 포함)를 적어줍니다.
+                // credentialsId는 아까 사용한 'AWS Credentials' 타입의 'aws-ecr-key'를 그대로 씁니다.
+                script {
+                    docker.withRegistry("https://${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com", "aws-ecr-key") {
+                        // 이 블록 안에서는 도커가 내부적으로 ECR 로그인 토큰을 자동으로 생성하여 로그인 상태를 유지합니다.
+                        sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
+                    }
                 }
             }
-        } 
+        }
     }
 }
