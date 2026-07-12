@@ -133,4 +133,19 @@ pipeline {
             }
         }
     }
+
+    post {
+        success {
+            echo "======================================="
+            echo "Pipeline SUCCESS"
+            echo "Image : ${ECR_REPO}:${IMAGE_TAG}"
+            echo "======================================="
+        }
+        failure {
+            echo "======================================="
+            echo "Pipeline FAILED"
+            echo "Console Output에서 실패 원인을 확인하세요."
+            echo "======================================="
+        }
+    }    
 }
