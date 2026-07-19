@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: petclinic
-        image: 450444046629.dkr.ecr.ca-central-1.amazonaws.com/user21-petclinic:v1
+        image: 450444046629.dkr.ecr.ca-central-1.amazonaws.com/user21-petclinic:v21
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
